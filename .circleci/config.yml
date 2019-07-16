@@ -9,6 +9,8 @@ jobs:
 
       - run: bundle install --path vendor/bundle
 
-      - run:
+      - setup_remote_docker
+
+      - run:          
           name: docker-image
           command: sudo docker build --rm -t gcr.io/sinatra-app/sinatra-app:v3 .
