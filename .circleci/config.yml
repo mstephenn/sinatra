@@ -7,15 +7,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-
-  deploy:
-    machine:
-      enabled: true
-    steps:
-      - checkout
-      
       - run: bundle install --path vendor/bundle
-
       - run:          
         name: docker-image
         command: docker build --rm -t gcr.io/sinatra-app/sinatra-app:v3 .
@@ -25,6 +17,3 @@ workflows:
   test_and_deploy:
     jobs:
       - test
-      - deploy:
-          requires:
-            - test
