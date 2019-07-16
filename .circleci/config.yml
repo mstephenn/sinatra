@@ -1,19 +1,30 @@
 version: 2
 jobs:
-  test:
+  build:
     working_directory: ~/circleci-demo-ruby-sinatra
     docker:      
       - image: circleci/ruby:2.5.5
     steps:
       - checkout
       - setup_remote_docker
+          
+  deploy:
+    machine:
+      enabled: true
+    steps:
+      - checkout
+      
       - run: bundle install --path vendor/bundle
+
       - run:          
         name: docker-image
-        command: docker build --rm -t gcr.io/sinatra-app/sinatra-app:v3 .
+        command: sudo docker build --rm -t gcr.io/sinatra-app/sinatra-app:v3 .
 
 workflows:
   version: 2
   test_and_deploy:
     jobs:
-      - test
+      - build
+      - deploy:
+          requires:
+            - build
