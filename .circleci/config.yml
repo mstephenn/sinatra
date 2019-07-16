@@ -23,10 +23,6 @@ jobs:
         paths:
           - vendor/bundle
 
-      # Run minitest
-      - type: shell
-        command: bundle exec rake
-
       # Save artifacts
       - type: store_test_results
         path: /tmp/test-results
