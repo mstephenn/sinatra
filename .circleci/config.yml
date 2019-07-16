@@ -24,7 +24,7 @@ jobs:
         name: Verify Docker Works
         command: |
           docker --version
-          docker run hello-world
+          sudo docker run hello-world
 
   deploy:
     machine:
