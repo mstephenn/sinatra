@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  test:
     working_directory: ~/circleci-demo-ruby-sinatra
     docker:      
       - image: circleci/ruby:2.5.5
@@ -24,7 +24,7 @@ workflows:
   version: 2
   test_and_deploy:
     jobs:
-      - build
+      - test
       - deploy:
           requires:
-            - build
+            - test
