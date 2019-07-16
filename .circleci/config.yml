@@ -7,8 +7,14 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - run: docker --version
-  
+
+      - type: setup-docker-engine
+      - type: shell
+        name: Verify Docker Works
+        command: |
+          docker --version
+          docker run hello-world
+          
   deploy:
     machine:
       enabled: true
