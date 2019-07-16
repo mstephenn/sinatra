@@ -11,4 +11,4 @@ jobs:
 
       - run:
           name: docker-image
-          command: docker build --rm -t gcr.io/${PROJECT}/${DOCKER_IMAGE}:${VERSION} .
+          command: docker build --rm -t gcr.io/sinatra-app/sinatra-app:v3 .
