@@ -8,12 +8,6 @@ jobs:
       - checkout
       - setup_remote_docker
 
-      - type: shell
-        name: Verify Docker Works
-        command: |
-          docker --version
-          docker run hello-world
-          
   deploy:
     machine:
       enabled: true
@@ -24,7 +18,7 @@ jobs:
 
       - run:          
         name: docker-image
-        command: sudo docker build --rm -t gcr.io/sinatra-app/sinatra-app:v3 .
+        command: docker build --rm -t gcr.io/sinatra-app/sinatra-app:v3 .
 
 workflows:
   version: 2
