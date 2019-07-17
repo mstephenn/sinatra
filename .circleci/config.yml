@@ -1,26 +1,58 @@
 version: 2
 jobs:
-  build:
-    working_directory: ~/circleci-demo-ruby-sinatra
+  build:    
     docker:      
       - image: circleci/ruby:2.5.5
+    working_directory: ~/sinatra-app
     steps:
       - checkout
       - setup_remote_docker
-
-  deploy:
-    machine:
-      enabled: true
+  
+  deploy_to_staging:
+    docker:
+      - image: google/cloud-sdk
+    environment:
+      - PROJECT_NAME: "sinatra-app"
+      - GOOGLE_PROJECT_ID: "sinatra-app"
+      - GOOGLE_COMPUTE_ZONE: "us-central1-a"
+      - GOOGLE_CLUSTER_NAME: "circle-ci-cluster"
     steps:
       - checkout
-      - run: bundle install --path vendor/bundle
-      - run: sudo docker build --rm -t gcr.io/sinatra-app/sinatra-app:v3 .
+      - run: 
+          name: Setup Google Cloud SDK
+          command: |
+            apt-get install -qq -y gettext
+            echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+            gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
+            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+            gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
+            gcloud --quiet container clusters get-credentials ${GOOGLE_CLUSTER_NAME}
+      - setup_remote_docker
+      - run: 
+          name: Docker build and push
+          command: |
+            docker build \
+              --build-arg COMMIT_REF=${CIRCLE_SHA1} \
+              --build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
+              -t ${PROJECT_NAME} .
+            docker tag ${PROJECT_NAME} gcr.io/${GOOGLE_PROJECT_ID}/${PROJECT_NAME}:${CIRCLE_SHA1}
+            gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://gcr.io
+            docker push gcr.io/${GOOGLE_PROJECT_ID}/${PROJECT_NAME}:${CIRCLE_SHA1}
+      - run: 
+          name: Deploy to Kubernetes
+          command: |
+            envsubst < ${HOME}/project/k8s.yml > ${HOME}/patched_k8s.yml
+            kubectl apply -f ${HOME}/patched_k8s.yml
+            kubectl rollout status deployment/${PROJECT_NAME}
 
 workflows:
   version: 2
-  test_and_deploy:
+  build:
     jobs:
       - build
-      - deploy:
+      - deploy_to_staging:
           requires:
             - build
+          filters:
+            branches:
+              only: master
